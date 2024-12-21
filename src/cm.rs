@@ -192,61 +192,9 @@ impl<'a, 'o, 'c> CommonMarkFormatter<'a, 'o, 'c> {
         }
     }
 
-    fn outc(&mut self, c: u8, escaping: Escaping, nextc: Option<&u8>) {
-        let follows_digit = !self.v.is_empty() && isdigit(self.v[self.v.len() - 1]);
-
-        let nextc = nextc.map_or(0, |&c| c);
-
-        let needs_escaping = c < 0x80
-            && escaping != Escaping::Literal
-            && ((escaping == Escaping::Normal
-                && (c < 0x20
-                    || c == b'*'
-                    || c == b'_'
-                    || c == b'['
-                    || c == b']'
-                    || c == b'#'
-                    || c == b'<'
-                    || c == b'>'
-                    || c == b'\\'
-                    || c == b'`'
-                    || c == b'!'
-                    || (c == b'&' && isalpha(nextc))
-                    || (c == b'!' && nextc == 0x5b)
-                    || (self.begin_content
-                        && (c == b'-' || c == b'+' || c == b'=')
-                        && !follows_digit)
-                    || (self.begin_content
-                        && (c == b'.' || c == b')')
-                        && follows_digit
-                        && (nextc == 0 || isspace(nextc)))))
-                || (escaping == Escaping::Url
-                    && (c == b'`'
-                        || c == b'<'
-                        || c == b'>'
-                        || isspace(c)
-                        || c == b'\\'
-                        || c == b')'
-                        || c == b'('))
-                || (escaping == Escaping::Title
-                    && (c == b'`' || c == b'<' || c == b'>' || c == b'"' || c == b'\\')));
-
-        if needs_escaping {
-            if escaping == Escaping::Url && isspace(c) {
-                write!(self.v, "%{:2X}", c).unwrap();
-                self.column += 3;
-            } else if ispunct(c) {
-                write!(self.v, "\\{}", c as char).unwrap();
-                self.column += 2;
-            } else {
-                let s = format!("&#{};", c);
-                self.write_all(s.as_bytes()).unwrap();
-                self.column += s.len();
-            }
-        } else {
-            self.v.push(c);
-            self.column += 1;
-        }
+    fn outc(&mut self, c: u8, _escaping: Escaping, _nextc: Option<&u8>) {
+        self.v.push(c);
+        self.column += 1;
     }
 
     fn cr(&mut self) {
@@ -450,7 +398,6 @@ impl<'a, 'o, 'c> CommonMarkFormatter<'a, 'o, 'c> {
                 _ => false,
             } {
                 self.cr();
-                write!(self, "<!-- end list -->").unwrap();
                 self.blankline();
             }
         }
