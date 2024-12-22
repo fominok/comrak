@@ -2909,7 +2909,9 @@ where
 
         let symbol = symbol as char;
 
-        if !self.options.parse.relaxed_tasklist_matching && !matches!(symbol, ' ' | 'x' | 'X') {
+        if !self.options.parse.relaxed_tasklist_matching
+            && !matches!(symbol, ' ' | 'x' | 'X' | 'c' | 'C' | 'd' | 'D')
+        {
             return;
         }
 
